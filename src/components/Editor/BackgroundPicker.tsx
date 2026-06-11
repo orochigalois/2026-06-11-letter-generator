@@ -23,7 +23,7 @@ export default function BackgroundPicker() {
       <h3 className="mb-2 text-xs font-medium text-neutral-500">
         信纸 / Stationery
       </h3>
-      <div className="grid grid-cols-5 gap-2">
+      <div className="grid grid-cols-6 gap-2">
         {BACKGROUND_PRESETS.map((b) => {
           const active =
             background.type === "preset" && background.key === b.key;
@@ -33,12 +33,16 @@ export default function BackgroundPicker() {
               type="button"
               title={b.label}
               onClick={() => setPresetBackground(b.key)}
-              className={`h-12 rounded-md border-2 transition ${
+              className={`h-12 rounded-md border-2 bg-cover bg-center transition ${
                 active
                   ? "border-amber-600 ring-1 ring-amber-600"
                   : "border-neutral-300 hover:border-neutral-400"
               }`}
-              style={{ background: b.paper }}
+              style={
+                b.image
+                  ? { backgroundImage: `url(${b.image})` }
+                  : { background: b.paper }
+              }
             />
           );
         })}

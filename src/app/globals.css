@@ -1,5 +1,98 @@
 @import "tailwindcss";
 
+/* Self-hosted local font (served from /public/fonts). */
+@font-face {
+  font-family: "FangZheng KaiTi";
+  src: url("/fonts/FangZhengKaiTi.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Alex";
+  src: url("/fonts/Alex.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "DeBiao";
+  src: url("/fonts/DeBiao.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Tangerine";
+  src: url("/fonts/Tangerine.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "XuJingLei";
+  src: url("/fonts/XuJingLei.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "xuanzongti";
+  src: url("/fonts/玄宗体.otf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "hanchan";
+  src: url("/fonts/寒蝉正楷体.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "qiushui";
+  src: url("/fonts/秋水書体.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "xinyi";
+  src: url("/fonts/新一細明體.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "xiawu";
+  src: url("/fonts/霞鹜臻楷.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "huxiaobo";
+  src: url("/fonts/胡晓波体.otf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "yuanjie";
+  src: url("/fonts/源界明朝体.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "duheng";
+  src: url("/fonts/权衡度量体.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   --background: #f3f4f6;
   --foreground: #1f2937;

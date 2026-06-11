@@ -35,13 +35,16 @@ export default function LetterPage({ layout, paragraphs, index, total }: Props) 
 
   const isFirst = index === 0;
 
+  // A custom upload takes priority; otherwise a preset may supply an image.
+  const bgImage = customImage ?? preset.image ?? null;
+
   const pageStyle: CSSProperties = {
     position: "relative",
     width: pageWidth,
     height: pageHeight,
     overflow: "hidden",
     color: preset.ink,
-    background: customImage ? "#ffffff" : preset.paper,
+    background: preset.paper,
   };
 
   const rulingStyle: CSSProperties = showLines
@@ -71,11 +74,11 @@ export default function LetterPage({ layout, paragraphs, index, total }: Props) 
 
   return (
     <div className="letter-page" data-page-index={index} style={pageStyle}>
-      {/* Custom uploaded background image (cover). */}
-      {customImage && (
+      {/* Background image: custom upload or a preset image (cover). */}
+      {bgImage && (
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          src={customImage}
+          src={bgImage}
           alt=""
           style={{
             position: "absolute",
