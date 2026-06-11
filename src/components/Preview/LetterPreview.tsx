@@ -25,6 +25,7 @@ export default function LetterPreview() {
       s.pageHeight,
       s.margin,
       s.showLines,
+      s.paragraphIndent,
       s.showPageNumber,
       s.pageNumberUseContentFont,
       s.pageNumberPosition,

@@ -106,6 +106,16 @@ export default function SettingsControls() {
         </div>
       </div>
 
+      <label className="flex items-center gap-2 text-sm text-neutral-700">
+        <input
+          type="checkbox"
+          checked={s.paragraphIndent}
+          onChange={(e) => s.setParagraphIndent(e.target.checked)}
+          className="h-4 w-4 accent-amber-700"
+        />
+        段落首行缩进 / Indent new paragraphs
+      </label>
+
       <div className="flex items-center justify-between">
         <label className="flex items-center gap-2 text-sm text-neutral-700">
           <input

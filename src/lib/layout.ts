@@ -48,6 +48,7 @@ export function resolveLayout(
     | "pageHeight"
     | "margin"
     | "showLines"
+    | "paragraphIndent"
     | "showPageNumber"
     | "pageNumberUseContentFont"
     | "pageNumberPosition"
@@ -58,6 +59,7 @@ export function resolveLayout(
   const contentHeight = s.pageHeight - s.margin * 2;
   const fontFamily = getFont(s.fontKey).family;
   const lineGapPx = s.fontSize * s.lineHeight;
+  const textIndent = s.paragraphIndent ? TEXT_INDENT : "0";
 
   const preset =
     s.background.type === "preset"
@@ -75,7 +77,7 @@ export function resolveLayout(
     fontSize: s.fontSize,
     lineHeight: s.lineHeight,
     paragraphGap: 0,
-    textIndent: TEXT_INDENT,
+    textIndent,
     title: s.title,
     titleFontSize: s.fontSize,
     titleGap: 0,
@@ -91,7 +93,7 @@ export function resolveLayout(
     fontFamily,
     fontSize: s.fontSize,
     lineHeight: s.lineHeight,
-    textIndent: TEXT_INDENT,
+    textIndent,
     title: s.title,
     preset,
     customImage,

@@ -24,6 +24,8 @@ export type LetterState = {
   margin: number;
   /** Whether to draw the horizontal ruled lines. */
   showLines: boolean;
+  /** Whether each paragraph starts with a 2-character first-line indent. */
+  paragraphIndent: boolean;
 
   /** Pagination (page-number) options. */
   showPageNumber: boolean;
@@ -42,6 +44,7 @@ export type LetterState = {
   setPageSize: (w: number, h: number) => void;
   setMargin: (v: number) => void;
   setShowLines: (v: boolean) => void;
+  setParagraphIndent: (v: boolean) => void;
   setShowPageNumber: (v: boolean) => void;
   setPageNumberUseContentFont: (v: boolean) => void;
   setPageNumberPosition: (v: PageNumberPosition) => void;
@@ -60,6 +63,7 @@ const DEFAULTS = {
   pageHeight: 1244, // ~A4 ratio (1 : 1.414)
   margin: 72,
   showLines: true,
+  paragraphIndent: true,
   showPageNumber: true,
   pageNumberUseContentFont: false,
   pageNumberPosition: "bottom-center" as PageNumberPosition,
@@ -83,6 +87,7 @@ export const useLetterStore = create<LetterState>()(
       setPageSize: (w, h) => set({ pageWidth: w, pageHeight: h }),
       setMargin: (v) => set({ margin: clamp(v, 24, 160) }),
       setShowLines: (v) => set({ showLines: v }),
+      setParagraphIndent: (v) => set({ paragraphIndent: v }),
       setShowPageNumber: (v) => set({ showPageNumber: v }),
       setPageNumberUseContentFont: (v) =>
         set({ pageNumberUseContentFont: v }),
@@ -107,6 +112,7 @@ export const useLetterStore = create<LetterState>()(
         pageHeight: s.pageHeight,
         margin: s.margin,
         showLines: s.showLines,
+        paragraphIndent: s.paragraphIndent,
         showPageNumber: s.showPageNumber,
         pageNumberUseContentFont: s.pageNumberUseContentFont,
         pageNumberPosition: s.pageNumberPosition,
