@@ -15,7 +15,12 @@ type Props = {
  * One rendered letter page. This is the exact DOM node captured during export,
  * so it must contain no preview-only chrome (shadows live on the wrapper).
  */
-export default function LetterPage({ layout, paragraphs, index, total }: Props) {
+export default function LetterPage({
+  layout,
+  paragraphs,
+  index,
+  total,
+}: Props) {
   const {
     pageWidth,
     pageHeight,
@@ -85,7 +90,7 @@ export default function LetterPage({ layout, paragraphs, index, total }: Props) 
             inset: 0,
             width: "100%",
             height: "100%",
-            objectFit: "cover",
+            objectFit: "fill",
           }}
         />
       )}
