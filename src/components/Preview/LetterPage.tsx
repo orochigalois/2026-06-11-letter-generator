@@ -1,0 +1,157 @@
+import type { CSSProperties } from "react";
+import type { ResolvedLayout } from "@/lib/layout";
+
+type Props = {
+  layout: ResolvedLayout;
+  /** Paragraphs assigned to this page by the paginator. */
+  paragraphs: string[];
+  /** Page index (0-based). Title is drawn only on page 0. */
+  index: number;
+  /** Total page count (for the footer page number). */
+  total: number;
+};
+
+/**
+ * One rendered letter page. This is the exact DOM node captured during export,
+ * so it must contain no preview-only chrome (shadows live on the wrapper).
+ */
+export default function LetterPage({ layout, paragraphs, index, total }: Props) {
+  const {
+    pageWidth,
+    pageHeight,
+    margin,
+    contentWidth,
+    contentHeight,
+    lineGapPx,
+    fontFamily,
+    fontSize,
+    lineHeight,
+    textIndent,
+    title,
+    preset,
+    customImage,
+    showLines,
+  } = layout;
+
+  const isFirst = index === 0;
+
+  const pageStyle: CSSProperties = {
+    position: "relative",
+    width: pageWidth,
+    height: pageHeight,
+    overflow: "hidden",
+    color: preset.ink,
+    background: customImage ? "#ffffff" : preset.paper,
+  };
+
+  const rulingStyle: CSSProperties = showLines
+    ? {
+        position: "absolute",
+        inset: 0,
+        backgroundImage: `repeating-linear-gradient(to bottom, transparent 0, transparent ${
+          lineGapPx - 1
+        }px, ${preset.line} ${lineGapPx - 1}px, ${preset.line} ${lineGapPx}px)`,
+      }
+    : {};
+
+  const textStyle: CSSProperties = {
+    position: "relative",
+    fontFamily,
+    fontSize,
+    lineHeight,
+    whiteSpace: "pre-wrap",
+    wordBreak: "break-word",
+    overflowWrap: "anywhere",
+  };
+
+  const paraStyle: CSSProperties = {
+    margin: 0,
+    textIndent,
+  };
+
+  return (
+    <div className="letter-page" data-page-index={index} style={pageStyle}>
+      {/* Custom uploaded background image (cover). */}
+      {customImage && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={customImage}
+          alt=""
+          style={{
+            position: "absolute",
+            inset: 0,
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+          }}
+        />
+      )}
+
+      {/* Decorative double frame. */}
+      {preset.frame && (
+        <>
+          <div
+            style={{
+              position: "absolute",
+              inset: Math.round(margin * 0.42),
+              border: `2px solid ${preset.frame}`,
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              inset: Math.round(margin * 0.42) + 5,
+              border: `1px solid ${preset.frame}`,
+              opacity: 0.7,
+            }}
+          />
+        </>
+      )}
+
+      {/* Content area (inside the margins). */}
+      <div
+        style={{
+          position: "absolute",
+          top: margin,
+          left: margin,
+          width: contentWidth,
+          height: contentHeight,
+        }}
+      >
+        {showLines && <div style={rulingStyle} />}
+
+        <div style={textStyle}>
+          {isFirst && title.trim() !== "" && (
+            <p style={{ margin: 0, fontWeight: 600, color: preset.accent }}>
+              {title}
+            </p>
+          )}
+          {paragraphs.map((p, i) => (
+            <p key={i} style={paraStyle}>
+              {p === "" ? " " : p}
+            </p>
+          ))}
+        </div>
+      </div>
+
+      {/* Page number footer (only when multi-page). */}
+      {total > 1 && (
+        <div
+          style={{
+            position: "absolute",
+            bottom: Math.round(margin * 0.35),
+            left: 0,
+            width: "100%",
+            textAlign: "center",
+            fontFamily: "'Noto Sans SC', sans-serif",
+            fontSize: 13,
+            color: preset.accent,
+            opacity: 0.7,
+          }}
+        >
+          {index + 1} / {total}
+        </div>
+      )}
+    </div>
+  );
+}
