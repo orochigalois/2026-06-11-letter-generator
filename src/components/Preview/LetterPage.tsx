@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 import type { ResolvedLayout } from "@/lib/layout";
+import { formatPageNumber } from "@/lib/pageNumber";
 
 type Props = {
   layout: ResolvedLayout;
@@ -36,6 +37,10 @@ export default function LetterPage({
     preset,
     customImage,
     showLines,
+    showPageNumber,
+    pageNumberFontFamily,
+    pageNumberPosition,
+    pageNumberFormat,
   } = layout;
 
   const isFirst = index === 0;
@@ -142,24 +147,43 @@ export default function LetterPage({
         </div>
       </div>
 
-      {/* Page number footer (only when multi-page). */}
-      {total > 1 && (
+      {/* Page number (only when multi-page and enabled). */}
+      {showPageNumber && total > 1 && (
         <div
           style={{
             position: "absolute",
-            bottom: Math.round(margin * 0.35),
-            left: 0,
-            width: "100%",
-            textAlign: "center",
-            fontFamily: "'Noto Sans SC', sans-serif",
+            fontFamily: pageNumberFontFamily,
             fontSize: 13,
             color: preset.accent,
-            opacity: 0.7,
+            opacity: 0.75,
+            ...pageNumberPositionStyle(pageNumberPosition, margin),
           }}
         >
-          {index + 1} / {total}
+          {formatPageNumber(index, total, pageNumberFormat)}
         </div>
       )}
     </div>
   );
+}
+
+/** Anchor + alignment for the page number based on its chosen corner. */
+function pageNumberPositionStyle(
+  position: ResolvedLayout["pageNumberPosition"],
+  margin: number,
+): CSSProperties {
+  const hpad = Math.round(margin * 0.5);
+  const vpad = Math.round(margin * 0.35);
+  switch (position) {
+    case "top-left":
+      return { top: vpad, left: hpad, textAlign: "left" };
+    case "top-right":
+      return { top: vpad, right: hpad, textAlign: "right" };
+    case "bottom-left":
+      return { bottom: vpad, left: hpad, textAlign: "left" };
+    case "bottom-right":
+      return { bottom: vpad, right: hpad, textAlign: "right" };
+    case "bottom-center":
+    default:
+      return { bottom: vpad, left: 0, width: "100%", textAlign: "center" };
+  }
 }

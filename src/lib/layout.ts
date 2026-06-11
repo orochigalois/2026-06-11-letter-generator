@@ -2,6 +2,11 @@ import { getFont } from "@/lib/fonts";
 import { getPreset, type BackgroundPreset } from "@/lib/backgrounds";
 import type { LetterState } from "@/store/useLetterStore";
 import type { PaginateStyle } from "@/lib/paginate";
+import {
+  PAGE_NUMBER_DEFAULT_FONT,
+  type PageNumberFormat,
+  type PageNumberPosition,
+} from "@/lib/pageNumber";
 
 const TEXT_INDENT = "2em";
 
@@ -22,6 +27,11 @@ export type ResolvedLayout = {
   preset: BackgroundPreset;
   customImage: string | null;
   showLines: boolean;
+  /** Pagination (page-number) rendering options. */
+  showPageNumber: boolean;
+  pageNumberFontFamily: string;
+  pageNumberPosition: PageNumberPosition;
+  pageNumberFormat: PageNumberFormat;
   paginateStyle: PaginateStyle;
 };
 
@@ -38,6 +48,10 @@ export function resolveLayout(
     | "pageHeight"
     | "margin"
     | "showLines"
+    | "showPageNumber"
+    | "pageNumberUseContentFont"
+    | "pageNumberPosition"
+    | "pageNumberFormat"
   >,
 ): ResolvedLayout {
   const contentWidth = s.pageWidth - s.margin * 2;
@@ -82,6 +96,12 @@ export function resolveLayout(
     preset,
     customImage,
     showLines: s.showLines,
+    showPageNumber: s.showPageNumber,
+    pageNumberFontFamily: s.pageNumberUseContentFont
+      ? fontFamily
+      : PAGE_NUMBER_DEFAULT_FONT,
+    pageNumberPosition: s.pageNumberPosition,
+    pageNumberFormat: s.pageNumberFormat,
     paginateStyle,
   };
 }

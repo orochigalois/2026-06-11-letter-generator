@@ -5,6 +5,7 @@ import { persist } from "zustand/middleware";
 import { DEFAULT_FONT_KEY } from "@/lib/fonts";
 import { DEFAULT_BG_KEY } from "@/lib/backgrounds";
 import { SAMPLE_BODY, SAMPLE_TITLE } from "@/lib/sample";
+import type { PageNumberFormat, PageNumberPosition } from "@/lib/pageNumber";
 
 export type Background =
   | { type: "preset"; key: string }
@@ -24,6 +25,13 @@ export type LetterState = {
   /** Whether to draw the horizontal ruled lines. */
   showLines: boolean;
 
+  /** Pagination (page-number) options. */
+  showPageNumber: boolean;
+  /** When true, the page number uses the content font; otherwise a sans default. */
+  pageNumberUseContentFont: boolean;
+  pageNumberPosition: PageNumberPosition;
+  pageNumberFormat: PageNumberFormat;
+
   setTitle: (v: string) => void;
   setBody: (v: string) => void;
   setFontKey: (v: string) => void;
@@ -34,6 +42,10 @@ export type LetterState = {
   setPageSize: (w: number, h: number) => void;
   setMargin: (v: number) => void;
   setShowLines: (v: boolean) => void;
+  setShowPageNumber: (v: boolean) => void;
+  setPageNumberUseContentFont: (v: boolean) => void;
+  setPageNumberPosition: (v: PageNumberPosition) => void;
+  setPageNumberFormat: (v: PageNumberFormat) => void;
   reset: () => void;
 };
 
@@ -48,6 +60,10 @@ const DEFAULTS = {
   pageHeight: 1244, // ~A4 ratio (1 : 1.414)
   margin: 72,
   showLines: true,
+  showPageNumber: true,
+  pageNumberUseContentFont: false,
+  pageNumberPosition: "bottom-center" as PageNumberPosition,
+  pageNumberFormat: "slash" as PageNumberFormat,
 };
 
 export const useLetterStore = create<LetterState>()(
@@ -67,6 +83,11 @@ export const useLetterStore = create<LetterState>()(
       setPageSize: (w, h) => set({ pageWidth: w, pageHeight: h }),
       setMargin: (v) => set({ margin: clamp(v, 24, 160) }),
       setShowLines: (v) => set({ showLines: v }),
+      setShowPageNumber: (v) => set({ showPageNumber: v }),
+      setPageNumberUseContentFont: (v) =>
+        set({ pageNumberUseContentFont: v }),
+      setPageNumberPosition: (v) => set({ pageNumberPosition: v }),
+      setPageNumberFormat: (v) => set({ pageNumberFormat: v }),
       reset: () => set({ ...DEFAULTS }),
     }),
     {
@@ -86,6 +107,10 @@ export const useLetterStore = create<LetterState>()(
         pageHeight: s.pageHeight,
         margin: s.margin,
         showLines: s.showLines,
+        showPageNumber: s.showPageNumber,
+        pageNumberUseContentFont: s.pageNumberUseContentFont,
+        pageNumberPosition: s.pageNumberPosition,
+        pageNumberFormat: s.pageNumberFormat,
       }),
     },
   ),

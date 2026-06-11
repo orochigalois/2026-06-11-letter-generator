@@ -5,6 +5,7 @@ import TextEditor from "@/components/Editor/TextEditor";
 import FontPicker from "@/components/Editor/FontPicker";
 import BackgroundPicker from "@/components/Editor/BackgroundPicker";
 import SettingsControls from "@/components/Editor/SettingsControls";
+import PaginationControls from "@/components/Editor/PaginationControls";
 import LetterPreview from "@/components/Preview/LetterPreview";
 import ExportBar from "@/components/ExportBar";
 
@@ -43,6 +44,7 @@ export default function Home() {
             <FontPicker />
             <BackgroundPicker />
             <SettingsControls />
+            <PaginationControls />
           </aside>
 
           {/* Preview pane */}
