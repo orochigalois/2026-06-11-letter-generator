@@ -5,11 +5,20 @@ import { PAGES_ROOT_ID } from "@/components/Preview/LetterPreview";
 
 export type ExportMode = "separate" | "zip";
 
+/** Phases reported to the UI so it can show a meaningful progress overlay. */
+export type ExportProgress =
+  | { phase: "preparing" }
+  | { phase: "rendering"; current: number; total: number }
+  | { phase: "finalizing" }
+  | { phase: "done"; total: number };
+
+export type ProgressCb = (p: ExportProgress) => void;
+
 type ExportOptions = {
   mode: ExportMode;
   pixelRatio?: number;
   fileBase?: string;
-  onProgress?: (done: number, total: number) => void;
+  onProgress?: ProgressCb;
 };
 
 function pad(n: number, width: number) {
@@ -29,7 +38,11 @@ function getPageNodes(): HTMLElement[] {
 }
 
 /** Wait for web fonts, then compute the embeddable @font-face CSS once. */
-async function prepareFonts(node: HTMLElement): Promise<string | undefined> {
+async function prepareFonts(
+  node: HTMLElement,
+  onProgress?: ProgressCb,
+): Promise<string | undefined> {
+  onProgress?.({ phase: "preparing" });
   if (typeof document !== "undefined" && document.fonts?.ready) {
     try {
       await document.fonts.ready;
@@ -52,14 +65,14 @@ export async function exportLetter(opts: ExportOptions): Promise<number> {
   const { mode, pixelRatio = 2, fileBase = "letter", onProgress } = opts;
 
   const nodes = getPageNodes();
-  const fontEmbedCSS = await prepareFonts(nodes[0]);
+  const fontEmbedCSS = await prepareFonts(nodes[0], onProgress);
 
   const total = nodes.length;
   const width = String(total).length;
   const blobs: Blob[] = [];
 
   for (let i = 0; i < total; i++) {
-    onProgress?.(i, total);
+    onProgress?.({ phase: "rendering", current: i + 1, total });
     const blob = await toBlob(nodes[i], {
       pixelRatio,
       cacheBust: true,
@@ -69,8 +82,8 @@ export async function exportLetter(opts: ExportOptions): Promise<number> {
     if (!blob) throw new Error(`Failed to render page ${i + 1}.`);
     blobs.push(blob);
   }
-  onProgress?.(total, total);
 
+  onProgress?.({ phase: "finalizing" });
   const names = blobs.map((_, i) =>
     total === 1 ? `${fileBase}.png` : `${fileBase}-${pad(i + 1, width)}.png`,
   );
@@ -84,6 +97,7 @@ export async function exportLetter(opts: ExportOptions): Promise<number> {
     blobs.forEach((b, i) => saveAs(b, names[i]));
   }
 
+  onProgress?.({ phase: "done", total });
   return total;
 }
 
@@ -92,7 +106,7 @@ type LongExportOptions = {
   fileBase?: string;
   /** Vertical gap (in page px, before pixelRatio) between stacked pages. */
   gap?: number;
-  onProgress?: (done: number, total: number) => void;
+  onProgress?: ProgressCb;
 };
 
 /**
@@ -105,13 +119,13 @@ export async function exportLongImage(
   const { pixelRatio = 2, fileBase = "letter", gap = 0, onProgress } = opts;
 
   const nodes = getPageNodes();
-  const fontEmbedCSS = await prepareFonts(nodes[0]);
+  const fontEmbedCSS = await prepareFonts(nodes[0], onProgress);
   const total = nodes.length;
 
   // Render each page to its own canvas first.
   const canvases: HTMLCanvasElement[] = [];
   for (let i = 0; i < total; i++) {
-    onProgress?.(i, total);
+    onProgress?.({ phase: "rendering", current: i + 1, total });
     const canvas = await toCanvas(nodes[i], {
       pixelRatio,
       cacheBust: true,
@@ -121,6 +135,7 @@ export async function exportLongImage(
     canvases.push(canvas);
   }
 
+  onProgress?.({ phase: "finalizing" });
   // Compose them onto one tall canvas.
   const gapPx = Math.round(gap * pixelRatio);
   const width = Math.max(...canvases.map((c) => c.width));
@@ -140,7 +155,6 @@ export async function exportLongImage(
     ctx.drawImage(c, Math.round((width - c.width) / 2), y);
     y += c.height + gapPx;
   }
-  onProgress?.(total, total);
 
   const blob: Blob | null = await new Promise((resolve) =>
     out.toBlob(resolve, "image/png"),
@@ -148,5 +162,6 @@ export async function exportLongImage(
   if (!blob) throw new Error("Failed to render the combined image.");
   saveAs(blob, `${fileBase}-long.png`);
 
+  onProgress?.({ phase: "done", total });
   return total;
 }

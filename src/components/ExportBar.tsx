@@ -5,43 +5,40 @@ import {
   exportLetter,
   exportLongImage,
   type ExportMode,
+  type ExportProgress,
 } from "@/lib/exportImage";
+import ExportOverlay from "./ExportOverlay";
 
 export default function ExportBar() {
   const [busy, setBusy] = useState(false);
-  const [status, setStatus] = useState<string | null>(null);
+  const [progress, setProgress] = useState<ExportProgress | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const withStatus = async (task: () => Promise<number>) => {
+  const runExport = async (
+    task: (onProgress: (p: ExportProgress) => void) => Promise<number>,
+  ) => {
     if (busy) return;
     setBusy(true);
     setError(null);
-    setStatus("Preparing…");
+    setProgress({ phase: "preparing" });
     try {
-      const total = await task();
-      setStatus(`Exported ${total} image${total > 1 ? "s" : ""} ✓`);
-      setTimeout(() => setStatus(null), 2500);
+      await task(setProgress);
+      // Keep the "done" state visible briefly, then dismiss the overlay.
+      setTimeout(() => setProgress(null), 1400);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Export failed.");
+      setProgress(null);
+      setTimeout(() => setError(null), 4000);
     } finally {
       setBusy(false);
     }
   };
 
   const run = (mode: ExportMode) =>
-    withStatus(() =>
-      exportLetter({
-        mode,
-        onProgress: (done, t) => setStatus(`Rendering ${done}/${t}…`),
-      }),
-    );
+    runExport((onProgress) => exportLetter({ mode, onProgress }));
 
   const runLong = () =>
-    withStatus(() =>
-      exportLongImage({
-        onProgress: (done, t) => setStatus(`Rendering ${done}/${t}…`),
-      }),
-    );
+    runExport((onProgress) => exportLongImage({ onProgress }));
 
   return (
     <div className="flex flex-wrap items-center gap-3">
@@ -70,8 +67,8 @@ export default function ExportBar() {
       >
         Download .zip
       </button>
-      {status && <span className="text-sm text-neutral-600">{status}</span>}
-      {error && <span className="text-sm text-red-600">{error}</span>}
+
+      <ExportOverlay progress={progress} error={error} />
     </div>
   );
 }
