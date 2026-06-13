@@ -1,14 +1,17 @@
 /**
  * Height-measurement based pagination.
  *
- * Given the body text and the rendered text styles, split it into pages that
- * each fit within a fixed content box. The first page reserves room for the
- * title. A single paragraph that is too tall to fit on one page is split at a
- * character (or word, for Latin runs) boundary.
+ * The body is laid out as a continuous flow so the rendered pages match the
+ * content line-for-line: each page is filled completely, and a paragraph that
+ * doesn't fit in the remaining space is split across the page boundary (rather
+ * than being pushed whole to the next page, which would leave blank lines).
  *
- * The measurement is done in a real (hidden) DOM node so wrapping matches the
- * actual preview exactly. Pass a host element with `.measure-host` styling and
- * the same content width as the preview's text column.
+ * Splitting a paragraph yields a continuation chunk; continuations are flagged
+ * so the renderer can omit the first-line indent on them. Empty lines in the
+ * body are preserved as empty lines.
+ *
+ * Measurement happens in a real (hidden) DOM node so wrapping matches the
+ * preview exactly. Pass a host element with `.measure-host` styling.
  */
 
 export type PaginateStyle = {
@@ -21,8 +24,14 @@ export type PaginateStyle = {
   lineHeight: number;
   /** Vertical gap between paragraphs, px. */
   paragraphGap: number;
-  /** First-line indent for each paragraph (CSS length, e.g. "2em"). */
+  /** First-line indent for a paragraph start (CSS length, e.g. "2em"). */
   textIndent: string;
+  /**
+   * When true, a paragraph that doesn't fit in the remaining space is pushed
+   * whole to the next page (it's only split if it can't fit a full page). When
+   * false, pages are filled completely and paragraphs flow across boundaries.
+   */
+  keepParagraphsTogether: boolean;
   /** Title text (rendered only on page 1). Empty = no title. */
   title: string;
   /** Title font size, px. */
@@ -31,7 +40,15 @@ export type PaginateStyle = {
   titleGap: number;
 };
 
-export type PaginateResult = string[][];
+/** One renderable chunk of a page. */
+export type LineSegment = {
+  text: string;
+  /** True for the first chunk of a paragraph (gets the indent); false for a
+   *  continuation produced by splitting across a page boundary. */
+  isParagraphStart: boolean;
+};
+
+export type PaginateResult = LineSegment[][];
 
 function escapeHtml(s: string): string {
   return s
@@ -51,15 +68,14 @@ export function paginate(
   host.style.fontSize = `${style.fontSize}px`;
   host.style.lineHeight = String(style.lineHeight);
 
-  const paraStyle = `margin:0 0 ${style.paragraphGap}px 0;text-indent:${style.textIndent};`;
+  const segHtml = (s: LineSegment): string => {
+    const indent = s.isParagraphStart ? style.textIndent : "0";
+    const inner = s.text === "" ? "<br/>" : escapeHtml(s.text);
+    return `<p style="margin:0 0 ${style.paragraphGap}px 0;text-indent:${indent};">${inner}</p>`;
+  };
 
-  const measure = (paras: string[]): number => {
-    host.innerHTML = paras
-      .map(
-        (p) =>
-          `<p style="${paraStyle}">${p === "" ? "<br/>" : escapeHtml(p)}</p>`,
-      )
-      .join("");
+  const measure = (segs: LineSegment[]): number => {
+    host.innerHTML = segs.map(segHtml).join("");
     return host.scrollHeight;
   };
 
@@ -76,8 +92,8 @@ export function paginate(
   const restAvail = style.contentHeight;
 
   const paragraphs = body.split("\n");
-  const pages: string[][] = [];
-  let current: string[] = [];
+  const pages: LineSegment[][] = [];
+  let current: LineSegment[] = [];
 
   const pushPage = () => {
     if (current.length > 0) {
@@ -88,53 +104,69 @@ export function paginate(
 
   for (const para of paragraphs) {
     let remaining = para;
+    let isStart = true;
 
     // Each iteration places as much of `remaining` as fits on the current page.
-    // Guard against pathological infinite loops.
     for (let guard = 0; guard < 100000; guard++) {
       const avail = pages.length === 0 ? firstAvail : restAvail;
+      const seg: LineSegment = { text: remaining, isParagraphStart: isStart };
 
-      if (measure([...current, remaining]) <= avail) {
-        current.push(remaining);
+      if (measure([...current, seg]) <= avail) {
+        current.push(seg);
         break;
       }
 
-      if (current.length === 0) {
-        // A single paragraph doesn't fit on an empty page — split it.
-        const cut = fitPrefix(measure, remaining, avail);
-        if (cut <= 0) {
-          // Even one piece can't fit (tiny page) — force-place to avoid a hang.
-          current.push(remaining);
-          pushPage();
-          remaining = "";
-          break;
-        }
-        const head = remaining.slice(0, cut);
-        current.push(head);
+      // Doesn't fully fit. In "keep together" mode, move the whole paragraph to
+      // a fresh page (unless the page is already empty — then it can't fit a
+      // full page either, so fall through and split it).
+      if (style.keepParagraphsTogether && current.length > 0) {
         pushPage();
-        remaining = remaining.slice(cut);
-        if (remaining === "") break;
-        // loop continues, placing the rest on a fresh page
-      } else {
-        // Current page has content; flush it and retry this paragraph fresh.
-        pushPage();
+        continue;
       }
+
+      // Otherwise fill the remaining space with as much as we can.
+      const cut = fitPrefix(measure, current, remaining, isStart, avail);
+
+      if (cut <= 0) {
+        // Nothing more fits on this page.
+        if (current.length > 0) {
+          pushPage();
+          continue; // retry on a fresh page
+        }
+        // Empty page yet nothing fits (page too small) — force one char to
+        // avoid an infinite loop.
+        current.push({ text: remaining.slice(0, 1), isParagraphStart: isStart });
+        pushPage();
+        remaining = remaining.slice(1);
+        isStart = false;
+        if (remaining === "") break;
+        continue;
+      }
+
+      current.push({ text: remaining.slice(0, cut), isParagraphStart: isStart });
+      pushPage();
+      remaining = remaining.slice(cut);
+      isStart = false; // the rest is a continuation
+      if (remaining === "") break;
     }
   }
 
   pushPage();
   // Always return at least one (possibly empty) page.
-  return pages.length > 0 ? pages : [[""]];
+  return pages.length > 0 ? pages : [[{ text: "", isParagraphStart: true }]];
 }
 
 /**
- * Binary-search the largest prefix length of `text` whose single-paragraph
- * render fits within `avail`. Backs off to the previous whitespace boundary so
- * Latin words aren't sliced mid-word (CJK has no spaces, so it cuts per char).
+ * Binary-search the largest prefix length of `text` that still fits within
+ * `avail` when appended after the already-placed `current` segments. Backs off
+ * to the previous whitespace boundary so Latin words aren't sliced mid-word
+ * (CJK has no spaces, so it cuts per character).
  */
 function fitPrefix(
-  measure: (paras: string[]) => number,
+  measure: (segs: LineSegment[]) => number,
+  current: LineSegment[],
   text: string,
+  isStart: boolean,
   avail: number,
 ): number {
   let lo = 1;
@@ -143,7 +175,11 @@ function fitPrefix(
 
   while (lo <= hi) {
     const mid = (lo + hi) >> 1;
-    if (measure([text.slice(0, mid)]) <= avail) {
+    const seg: LineSegment = {
+      text: text.slice(0, mid),
+      isParagraphStart: isStart,
+    };
+    if (measure([...current, seg]) <= avail) {
       best = mid;
       lo = mid + 1;
     } else {

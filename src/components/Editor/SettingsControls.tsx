@@ -116,6 +116,21 @@ export default function SettingsControls() {
         段落首行缩进 / Indent new paragraphs
       </label>
 
+      <label className="flex items-start gap-2 text-sm text-neutral-700">
+        <input
+          type="checkbox"
+          checked={s.keepParagraphsTogether}
+          onChange={(e) => s.setKeepParagraphsTogether(e.target.checked)}
+          className="mt-0.5 h-4 w-4 accent-amber-700"
+        />
+        <span>
+          段落不跨页 / Keep paragraphs together
+          <span className="mt-0.5 block text-xs text-neutral-400">
+            段落放不下时整段移到下一页（否则连续排版填满每页）
+          </span>
+        </span>
+      </label>
+
       <div className="flex items-center justify-between">
         <label className="flex items-center gap-2 text-sm text-neutral-700">
           <input

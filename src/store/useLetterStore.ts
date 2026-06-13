@@ -26,6 +26,8 @@ export type LetterState = {
   showLines: boolean;
   /** Whether each paragraph starts with a 2-character first-line indent. */
   paragraphIndent: boolean;
+  /** Keep whole paragraphs together across page breaks (vs. continuous flow). */
+  keepParagraphsTogether: boolean;
 
   /** Pagination (page-number) options. */
   showPageNumber: boolean;
@@ -45,6 +47,7 @@ export type LetterState = {
   setMargin: (v: number) => void;
   setShowLines: (v: boolean) => void;
   setParagraphIndent: (v: boolean) => void;
+  setKeepParagraphsTogether: (v: boolean) => void;
   setShowPageNumber: (v: boolean) => void;
   setPageNumberUseContentFont: (v: boolean) => void;
   setPageNumberPosition: (v: PageNumberPosition) => void;
@@ -64,6 +67,7 @@ const DEFAULTS = {
   margin: 72,
   showLines: true,
   paragraphIndent: true,
+  keepParagraphsTogether: false,
   showPageNumber: true,
   pageNumberUseContentFont: false,
   pageNumberPosition: "bottom-center" as PageNumberPosition,
@@ -88,6 +92,7 @@ export const useLetterStore = create<LetterState>()(
       setMargin: (v) => set({ margin: clamp(v, 24, 160) }),
       setShowLines: (v) => set({ showLines: v }),
       setParagraphIndent: (v) => set({ paragraphIndent: v }),
+      setKeepParagraphsTogether: (v) => set({ keepParagraphsTogether: v }),
       setShowPageNumber: (v) => set({ showPageNumber: v }),
       setPageNumberUseContentFont: (v) =>
         set({ pageNumberUseContentFont: v }),
@@ -113,6 +118,7 @@ export const useLetterStore = create<LetterState>()(
         margin: s.margin,
         showLines: s.showLines,
         paragraphIndent: s.paragraphIndent,
+        keepParagraphsTogether: s.keepParagraphsTogether,
         showPageNumber: s.showPageNumber,
         pageNumberUseContentFont: s.pageNumberUseContentFont,
         pageNumberPosition: s.pageNumberPosition,

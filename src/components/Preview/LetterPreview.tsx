@@ -3,7 +3,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useLetterStore } from "@/store/useLetterStore";
 import { resolveLayout } from "@/lib/layout";
-import { paginate } from "@/lib/paginate";
+import { paginate, type LineSegment } from "@/lib/paginate";
 import LetterPage from "./LetterPage";
 
 /** Stable id so the export routine can find the real-size page nodes. */
@@ -26,6 +26,7 @@ export default function LetterPreview() {
       s.margin,
       s.showLines,
       s.paragraphIndent,
+      s.keepParagraphsTogether,
       s.showPageNumber,
       s.pageNumberUseContentFont,
       s.pageNumberPosition,
@@ -35,7 +36,9 @@ export default function LetterPreview() {
 
   const measureRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const [pages, setPages] = useState<string[][]>([[""]]);
+  const [pages, setPages] = useState<LineSegment[][]>([
+    [{ text: "", isParagraphStart: true }],
+  ]);
   const [scale, setScale] = useState(1);
   const [fontTick, setFontTick] = useState(0);
 
@@ -96,7 +99,7 @@ export default function LetterPreview() {
         id={PAGES_ROOT_ID}
         className="mx-auto flex flex-col items-center gap-8"
       >
-        {pages.map((para, i) => (
+        {pages.map((segs, i) => (
           <div
             key={i}
             className="shadow-xl shadow-black/20"
@@ -115,7 +118,7 @@ export default function LetterPreview() {
             >
               <LetterPage
                 layout={layout}
-                paragraphs={para}
+                segments={segs}
                 index={i}
                 total={pages.length}
               />

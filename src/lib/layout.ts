@@ -49,6 +49,7 @@ export function resolveLayout(
     | "margin"
     | "showLines"
     | "paragraphIndent"
+    | "keepParagraphsTogether"
     | "showPageNumber"
     | "pageNumberUseContentFont"
     | "pageNumberPosition"
@@ -78,6 +79,7 @@ export function resolveLayout(
     lineHeight: s.lineHeight,
     paragraphGap: 0,
     textIndent,
+    keepParagraphsTogether: s.keepParagraphsTogether,
     title: s.title,
     titleFontSize: s.fontSize,
     titleGap: 0,

@@ -1,11 +1,12 @@
 import type { CSSProperties } from "react";
 import type { ResolvedLayout } from "@/lib/layout";
+import type { LineSegment } from "@/lib/paginate";
 import { formatPageNumber } from "@/lib/pageNumber";
 
 type Props = {
   layout: ResolvedLayout;
-  /** Paragraphs assigned to this page by the paginator. */
-  paragraphs: string[];
+  /** Text segments assigned to this page by the paginator. */
+  segments: LineSegment[];
   /** Page index (0-based). Title is drawn only on page 0. */
   index: number;
   /** Total page count (for the footer page number). */
@@ -16,12 +17,7 @@ type Props = {
  * One rendered letter page. This is the exact DOM node captured during export,
  * so it must contain no preview-only chrome (shadows live on the wrapper).
  */
-export default function LetterPage({
-  layout,
-  paragraphs,
-  index,
-  total,
-}: Props) {
+export default function LetterPage({ layout, segments, index, total }: Props) {
   const {
     pageWidth,
     pageHeight,
@@ -75,11 +71,6 @@ export default function LetterPage({
     whiteSpace: "pre-wrap",
     wordBreak: "break-word",
     overflowWrap: "anywhere",
-  };
-
-  const paraStyle: CSSProperties = {
-    margin: 0,
-    textIndent,
   };
 
   return (
@@ -139,9 +130,15 @@ export default function LetterPage({
               {title}
             </p>
           )}
-          {paragraphs.map((p, i) => (
-            <p key={i} style={paraStyle}>
-              {p === "" ? " " : p}
+          {segments.map((seg, i) => (
+            <p
+              key={i}
+              style={{
+                margin: 0,
+                textIndent: seg.isParagraphStart ? textIndent : "0",
+              }}
+            >
+              {seg.text === "" ? " " : seg.text}
             </p>
           ))}
         </div>
@@ -171,8 +168,8 @@ function pageNumberPositionStyle(
   position: ResolvedLayout["pageNumberPosition"],
   margin: number,
 ): CSSProperties {
-  const hpad = Math.round(margin * 0.5);
-  const vpad = Math.round(margin * 0.35);
+  const hpad = Math.round(margin * 0.6);
+  const vpad = Math.round(margin * 0.55);
   switch (position) {
     case "top-left":
       return { top: vpad, left: hpad, textAlign: "left" };
